@@ -189,6 +189,13 @@ func (v *returnsVisitor) Visit(node ast.Node) ast.Visitor {
 	}
 
 	if len(namedReturns) > 0 && funcDecl.Body != nil {
+		// []ast.Ident -> []string
+		namedReturnIdents := make([]string, len(namedReturns))
+		for i, x := range namedReturns {
+			namedReturnIdents[i] = x.Name
+		}
+		fix := "return " + strings.Join(namedReturnIdents, ", ")
+
 		// Scan the body for usage of the named returns
 		for _, stmt := range funcDecl.Body.List {
 
@@ -198,7 +205,8 @@ func (v *returnsVisitor) Visit(node ast.Node) ast.Visitor {
 					file := v.f.File(s.Pos())
 					if file != nil && uint(functionLineLength) > v.maxLength {
 						if funcDecl.Name != nil {
-							log.Printf("%v:%v %v naked returns on %v line function \n", file.Name(), file.Position(s.Pos()).Line, funcDecl.Name.Name, functionLineLength)
+							// log.Printf("%v:%v %v naked returns on %v line function \n", file.Name(), file.Position(s.Pos()).Line, funcDecl.Name.Name, functionLineLength)
+							log.Printf("%v:%v:%s\n", file.Name(), file.Position(s.Pos()).Line, fix)
 						}
 					}
 					continue
